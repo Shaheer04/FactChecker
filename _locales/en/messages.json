@@ -1,0 +1,10 @@
+{
+    "extensionName": {
+        "message": "Fact Checker Extension",
+        "description": "The name of the extension"
+    },
+    "extensionDescription": {
+        "message": "A browser extension that fact-checks selected text using the Gemini API.",
+        "description": "Description of the extension"
+    }
+}

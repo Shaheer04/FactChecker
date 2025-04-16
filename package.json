@@ -1,0 +1,29 @@
+{
+  "name": "fact-checker-extension",
+  "version": "1.0.0",
+  "description": "A browser extension that adds a context menu option to fact-check selected text using the Gemini API.",
+  "main": "src/background/background.js",
+  "scripts": {
+    "build": "echo 'Build script placeholder'",
+    "test": "echo 'Test script placeholder'"
+  },
+  "permissions": [
+    "contextMenus",
+    "activeTab",
+    "scripting"
+  ],
+  "background": {
+    "scripts": ["src/background/background.js"],
+    "persistent": false
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content/content.js"]
+    }
+  ],
+  "manifest_version": 2,
+  "dependencies": {
+    "axios": "^0.21.1"
+  }
+}
