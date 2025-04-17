@@ -1,6 +1,4 @@
-document.addEventListener('DOMContentLoaded', async () => {
-    const resultDiv = document.getElementById('result');
-
+async function stylePopup() {
     // Add custom CSS with variables for consistent theming
     const styleElement = document.createElement('style');
     styleElement.textContent = `
@@ -267,18 +265,54 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        if (message.action === "factCheckLoaded") {
+            renderFactCheckResult({ lastCheck: message.result }, document.getElementById('result'));
+        } else if (message.action === "factCheckLoading") {
+            renderFactCheckLoading(document.getElementById('result'), message.result);
+        }
+    })
+    chrome.runtime.sendMessage({ action: "backgroundHandshake" });
+
     // Get the latest result from storage
-    chrome.storage.local.get('lastCheck').then((result) => {
-        console.log(result);
-        if (result.lastCheck) {
-            const { statement, score, justification, fact } = result.lastCheck;
-            const scorePercentage = Math.round(score * 100);
-            const scoreClass = fact ? 'score-true' : 'score-false';
-            const verdict = fact ? 'True' : 'False';
-            const icon = fact ? '✓' : '✗';
-            
-            resultDiv.innerHTML = `
-                <div class="result-card">
+    chrome.storage.local.get(['lastCheck', 'loading']).then((result) => {
+        console.log("domcontentloaded", result);
+        const resultDiv = document.getElementById('result');
+
+        if (result.loading) {
+            // Show loading state with selected text
+            renderFactCheckLoading(resultDiv, result);
+        } else if (result.lastCheck) {
+            renderFactCheckResult(result, resultDiv);
+        } else {
+            renderFaceCheckMissing(resultDiv);
+        }
+    });
+});
+
+function renderFaceCheckMissing(resultDiv) {
+    resultDiv.innerHTML = `
+        <div class="empty-state">
+            <div class="empty-icon">🔍</div>
+            <p>No fact checks available</p>
+            <p class="empty-hint">Highlight text on a webpage and use FactChecker to analyze it.</p>
+        </div>
+    `;
+}
+
+function renderFactCheckResult(result, resultDiv) {
+    const { statement, score, justification, fact } = result.lastCheck;
+    const scorePercentage = Math.round(score * 100);
+    const scoreClass = fact ? 'score-true' : 'score-false';
+    const verdict = fact ? 'True' : 'False';
+    const icon = fact ? '✓' : '✗';
+
+    stylePopup();
+    resultDiv.innerHTML = `
+                <div class="result-caresultrd">
                     <h3 class="card-title">Result</h3>
                     <div class="statement">"${statement}"</div>
                     <div class="verdict-container ${scoreClass}">
@@ -297,14 +331,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                 </div>
             `;
-        } else {
-            resultDiv.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-icon">🔍</div>
-                    <p>No fact checks available</p>
-                    <p class="empty-hint">Highlight text on a webpage and use FactChecker to analyze it.</p>
+}
+
+function renderFactCheckLoading(resultDiv, result) {
+    resultDiv.innerHTML = `
+                <div class="loader-container">
+                    <div class="loader"></div>
+                    <p class="loading-text">Analyzing text for factual accuracy...</p>
+                    ${result.selectedText ?
+            `<div class="selected-text">"${result.selectedText}"</div>` :
+            ''}
                 </div>
             `;
-        }
-    });
-});
+}
